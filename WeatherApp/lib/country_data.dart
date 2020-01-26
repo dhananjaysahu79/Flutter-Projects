@@ -6,6 +6,10 @@ import 'package:http/http.dart'as http;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'dart:math' as math;
 import 'package:intl/intl.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:geocoder/geocoder.dart';
+import 'airqualitysearch.dart';
+import 'main.dart';
 
 class CountryData extends StatefulWidget {
   CountryData({Key key}) : super(key: key);
@@ -16,7 +20,7 @@ class CountryData extends StatefulWidget {
 class _CountryDataState extends State<CountryData> {
   TextEditingController t1 =TextEditingController();
    var url ="56ea943804a332dfedff52ba6de1543a";
-   var loc="jamshedpur";
+   var loc;
    var decodedJson;
    var humidity;
    var wind;
@@ -39,17 +43,47 @@ class _CountryDataState extends State<CountryData> {
    var date5;
    var month1;
    var month5;
+   var curmax=0;
+   var day1_icon;
+   var day2_icon;
+   var day3_icon;
+   var day4_icon;
+   var day5_icon;
+   var long ;
+   var lat;
+   
+   //var curmax=0;
+   var curmin;
+   var first;
+   var feels_like;
+   Image img;
+   var img_name;
    List<String> dailymin_temp=new List(5);
    List<String> dailymax_temp=new List(5);
-
+   var allloaded=null;
 
    @override
   void initState() {
+    getlocation();
     super.initState();
-
-    fetchData();
-    fetchForecastData();
+    //fetchData();
+    //fetchForecastData();
+   
   }
+  getlocation() async {
+    Position position =await Geolocator().getCurrentPosition(
+     desiredAccuracy:LocationAccuracy.high
+      );
+       final coordinates =new Coordinates(position.latitude,position.longitude);
+        var addresses= await Geocoder.local.findAddressesFromCoordinates(coordinates);
+         first= addresses.first;
+        setState(() {
+          loc=first.locality;
+          fetchData();
+          fetchForecastData();
+        });
+  }
+  
 
   Future fetchData() async {
     var res = await http.get(Uri.encodeFull("https://api.openweathermap.org/data/2.5/weather?q=$loc&units=imperial&appid=56ea943804a332dfedff52ba6de1543a"),
@@ -69,7 +103,11 @@ class _CountryDataState extends State<CountryData> {
      location=decodedJson["name"];
      sunrise=decodedJson["sys"]["sunrise"];
      sunset=decodedJson["sys"]["sunset"];
-    
+     feels_like=decodedJson["main"]["feels_like"];
+     feels_like=tempConverter(feels_like) + 1;
+     img_name=decodedJson["weather"][0]["icon"];
+     long=decodedJson["coord"]["lon"];
+     lat=decodedJson["coord"]["lat"];
     });
   }
 
@@ -78,38 +116,75 @@ class _CountryDataState extends State<CountryData> {
    headers: {"results":"application/json"}
     );
     decodedJson2 = jsonDecode(res1.body);
+    calmax(int start,int end){
+      var curmax1=0;
+     for(int i=start;i<=end;i++){
+      if (tempConverter(decodedJson2["list"][i]["main"]["temp_max"])>curmax1){
+        curmax1=tempConverter(decodedJson2["list"][i]["main"]["temp_max"]);
+      }
+      }
+      return curmax1;
+     }
+     calmin(int index,int start,int end){
+       var curmin2=55;
+       for(int i=start;i<=end;i++){
+       if (tempConverter(decodedJson2["list"][i]["main"]["temp_min"])<curmin2){
+        curmin2=tempConverter(decodedJson2["list"][i]["main"]["temp_min"]);
+       }
+      }
+      return curmin2;
+     }
+     dailymax_temp[0]=calmax(8,13).toString();
+      dailymax_temp[1]=calmax(14,20).toString();
+      dailymax_temp[2]=calmax(21,27).toString();
+      dailymax_temp[3]=calmax(28,33).toString();
+      dailymax_temp[4]=calmax(34,39).toString();
+      dailymin_temp[0]=calmin(0,8,13).toString();
+      dailymin_temp[1]=calmin(1,14,20).toString();
+      dailymin_temp[2]=calmin(2,21,27).toString();
+      dailymin_temp[3]=calmin(3,28,33).toString();
+      dailymin_temp[4]=calmin(4,34,39).toString();
     setState(() {
+      for(int i=4;i<14;i++){
+      if (tempConverter(decodedJson2["list"][i]["main"]["temp_max"])>curmax){
+        curmax=tempConverter(decodedJson2["list"][i]["main"]["temp_max"]);
+      }
+      }
+      curmin=curmax;
+      for(int i=1;i<10;i++){
+      if (tempConverter(decodedJson2["list"][i]["main"]["temp_min"])<curmin){
+        curmin=tempConverter(decodedJson2["list"][i]["main"]["temp_min"]);
+      }
+      }
       var format1 =DateFormat("d");
       var format2 =DateFormat("MMM");
       var format3=DateFormat("EEEE");
       var format4=DateFormat("EEE");
-      date1=format1.format(DateTime.fromMillisecondsSinceEpoch(decodedJson2["list"][1]["dt"] * 1000));
-      date5=format1.format(DateTime.fromMillisecondsSinceEpoch(decodedJson2["list"][33]["dt"] * 1000));
-      month1=format2.format(DateTime.fromMillisecondsSinceEpoch(decodedJson2["list"][1]["dt"] * 1000));
-      month5=format2.format(DateTime.fromMillisecondsSinceEpoch(decodedJson2["list"][33]["dt"] * 1000));
-      day1=format3.format(DateTime.fromMillisecondsSinceEpoch(decodedJson2["list"][1]["dt"] * 1000));
-      day5=format3.format(DateTime.fromMillisecondsSinceEpoch(decodedJson2["list"][33]["dt"] * 1000));
-      sday1=format4.format(DateTime.fromMillisecondsSinceEpoch(decodedJson2["list"][1]["dt"] * 1000)).toUpperCase();
-      sday2=format4.format(DateTime.fromMillisecondsSinceEpoch(decodedJson2["list"][9]["dt"] * 1000)).toUpperCase();
-      sday3=format4.format(DateTime.fromMillisecondsSinceEpoch(decodedJson2["list"][17]["dt"] * 1000)).toUpperCase();
-      sday4=format4.format(DateTime.fromMillisecondsSinceEpoch(decodedJson2["list"][25]["dt"] * 1000)).toUpperCase();
-      sday5=format4.format(DateTime.fromMillisecondsSinceEpoch(decodedJson2["list"][33]["dt"] * 1000)).toUpperCase();
-      dailymin_temp[0]=tempConverter(decodedJson2["list"][1]["main"]["temp_min"]).toString();
-      dailymin_temp[1]=tempConverter(decodedJson2["list"][9]["main"]["temp_min"]).toString();
-      dailymin_temp[2]=tempConverter(decodedJson2["list"][17]["main"]["temp_min"]).toString();
-      dailymin_temp[3]=tempConverter(decodedJson2["list"][25]["main"]["temp_min"]).toString();
-      dailymin_temp[4]=tempConverter(decodedJson2["list"][33]["main"]["temp_min"]).toString();
-      dailymax_temp[0]=tempConverter(decodedJson2["list"][4]["main"]["temp_max"]).toString();
-      dailymax_temp[1]=tempConverter(decodedJson2["list"][13]["main"]["temp_max"]).toString();
-      dailymax_temp[2]=tempConverter(decodedJson2["list"][21]["main"]["temp_max"]).toString();
-      dailymax_temp[3]=tempConverter(decodedJson2["list"][29]["main"]["temp_max"]).toString();
-      dailymax_temp[4]=tempConverter(decodedJson2["list"][37]["main"]["temp_max"]).toString();
+      date1=format1.format(DateTime.fromMillisecondsSinceEpoch(decodedJson2["list"][8]["dt"] * 1000));
+      date5=format1.format(DateTime.fromMillisecondsSinceEpoch(decodedJson2["list"][39]["dt"] * 1000));
+      month1=format2.format(DateTime.fromMillisecondsSinceEpoch(decodedJson2["list"][8]["dt"] * 1000));
+      month5=format2.format(DateTime.fromMillisecondsSinceEpoch(decodedJson2["list"][39]["dt"] * 1000));
+      day1=format3.format(DateTime.fromMillisecondsSinceEpoch(decodedJson2["list"][8]["dt"] * 1000));
+      day5=format3.format(DateTime.fromMillisecondsSinceEpoch(decodedJson2["list"][39]["dt"] * 1000));
+      sday1=format4.format(DateTime.fromMillisecondsSinceEpoch(decodedJson2["list"][8]["dt"] * 1000)).toUpperCase();
+      sday2=format4.format(DateTime.fromMillisecondsSinceEpoch(decodedJson2["list"][16]["dt"] * 1000)).toUpperCase();
+      sday3=format4.format(DateTime.fromMillisecondsSinceEpoch(decodedJson2["list"][24]["dt"] * 1000)).toUpperCase();
+      sday4=format4.format(DateTime.fromMillisecondsSinceEpoch(decodedJson2["list"][32]["dt"] * 1000)).toUpperCase();
+      sday5=format4.format(DateTime.fromMillisecondsSinceEpoch(decodedJson2["list"][39]["dt"] * 1000)).toUpperCase();
+      day1_icon=(decodedJson2["list"][11]["weather"][0]["description"]).toString();
+      day2_icon=decodedJson2["list"][19]["weather"][0]["description"].toString();
+      day3_icon=decodedJson2["list"][27]["weather"][0]["description"].toString();
+      day4_icon=decodedJson2["list"][34]["weather"][0]["description"].toString();
+      day5_icon=decodedJson2["list"][39]["weather"][0]["description"].toString();
+      print(day1_icon);
+      allloaded=1;
     });
   }
+  
 
  tempConverter(var t){
      t=5/9*(t-32);
-     t=t.round()+1;
+     t=t.round()-1;
      return t;
  }
 
@@ -149,6 +224,29 @@ String readTimestamp(int timestamp) {
     return time;
   }
 
+  geticon(String name){
+    IconData icon;
+    if(name=="clear sky"){
+      icon= Icons.wb_sunny;
+    }
+    else if(name=="few clouds"){
+      icon=MdiIcons.weatherCloudy;
+    }
+    else if(name=="snow"){
+      icon=MdiIcons.weatherSnowy;
+    }
+    else if(name=="mist"){
+      icon=MdiIcons.weatherPartlyRainy;
+    }
+    else if(name=="broken clouds"||name=="overcast clouds"){
+      icon=MdiIcons.weatherCloudy;
+    }
+    else{
+      icon= Icons.wb_sunny;
+    }
+   return icon;
+  }
+
 
 
 
@@ -157,86 +255,57 @@ String readTimestamp(int timestamp) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(statusBarColor: Colors.transparent), 
       child: decodedJson==null?Center(child:CircularProgressIndicator()):Scaffold(
-    body: SingleChildScrollView(
-          child: Column(
+      body: SingleChildScrollView(
+        child: Column(
         children: <Widget>[
           Padding(padding: EdgeInsets.only(top: MediaQuery.of(context).size.height/82),),
           Row(
             children: <Widget>[
-                    Container(
-                  color: Colors.white.withOpacity(0),
-                  height: MediaQuery.of(context).size.height/8,
-                  width: MediaQuery.of(context).size.width,
+              Container(
+                color: Colors.white.withOpacity(0),
+                height: MediaQuery.of(context).size.height/8,
+                width: MediaQuery.of(context).size.width,
                   child:Center(
-                     child: Row(
-                       mainAxisAlignment: MainAxisAlignment.spaceAround,
-                       children: <Widget>[
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: <Widget>[
                         Container(
                           child: Row(
                             children: <Widget>[
-                               Card(
-             elevation: 10,
-             color: Colors.black54,
-             //color: Color.fromARGB(255, 16, 19, 20),
-             shape:RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-             child: Container(
-      
-           width: MediaQuery.of(context).size.width/1.4,
-            height: MediaQuery.of(context).size.height/17,
-            child: Center(
-             child: TextField(
-               controller: t1,   onSubmitted: search(),           
-               style: TextStyle(color: Colors.white),
-           decoration: InputDecoration(
-             prefixIcon: Icon(Icons.search,color: Colors.white,),
-             hintText: "Search Location..",
-             labelStyle: TextStyle(color: Colors.white),
-             border: InputBorder.none,
-             hintStyle: TextStyle(
-                 color: Colors.white,
-                 //fontWeight: FontWeight.bold,
-                 fontSize: MediaQuery.of(context).size.height/41)
-                 ,),
-                ),
-              ),
-             ),
-           ),
-          //  InkWell(
-          //    onTap: search(),
-          //      child: Card(
-          //      elevation: 10,
-          //      color: Colors.black54,
-          //      child: Container(
-          //        decoration: BoxDecoration(
-          //          borderRadius: BorderRadius.only(topLeft: Radius.circular(20),bottomRight: Radius.circular(20)),
-          //         gradient: LinearGradient(                 
-          //               colors: <Color>[
-          //                 Color.fromARGB(210, 92, 226, 201),
-          //                 Color.fromARGB(210, 75, 201, 207)
-          //                 // Color.fromARGB(200, 184, 30, 160),
-          //                 // Color.fromARGB(200, 60, 17, 109),
-          //               ],
-          //               stops: [0,0.8],
-          //               begin: Alignment.topLeft,
-          //               end: Alignment.bottomRight)
-
-          //        ),
-          //        height: MediaQuery.of(context).size.height/17,
-          //        width:  MediaQuery.of(context).size.width/10,
-          //        child: Center(child: Text("OK",style:TextStyle(color: Colors.black,fontWeight: FontWeight.bold))),
-          //      ),
-          //    ),
-          //  ),
-                            ],
+                              Card(
+                               elevation: 10,
+                               color: Colors.black54,
+                               shape:RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                               child: Container(
+                               width: MediaQuery.of(context).size.width/1.4,
+                               height: MediaQuery.of(context).size.height/17,
+                               child: Center(
+                               child: TextField(
+                               controller: t1,   onSubmitted: search(),           
+                               style: TextStyle(color: Colors.white),
+                               decoration: InputDecoration(
+                               prefixIcon: Icon(Icons.search,color: Colors.white,),
+                               hintText: "Search Location..",
+                               labelStyle: TextStyle(color: Colors.white),
+                               border: InputBorder.none,
+                               hintStyle: TextStyle(
+                               color: Colors.white,
+                               fontSize: MediaQuery.of(context).size.height/41)
+                              ,),
+                             ),
+                            ),
+                           ),
                           ),
+                         ],
                         ),
-           Text("AQ\nWeather",style:TextStyle(
-                   color:Colors.greenAccent,
-                   fontWeight: FontWeight.bold,
-                   fontSize: 18
-                     ))
-                       ],
-                     ),
+                       ),
+                    Text("AQ\nWeather",style:TextStyle(
+                     color:Colors.greenAccent,
+                     fontWeight: FontWeight.bold,
+                     fontSize: 18
+                    ))
+                    ],
+                    ),
                   ),
                 ),
             ],
@@ -260,23 +329,20 @@ String readTimestamp(int timestamp) {
                   height: MediaQuery.of(context).size.height/3.3,
                   width: MediaQuery.of(context).size.width,
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: <Color>[
-                        Color.fromARGB(210, 92, 226, 201),
-                        Color.fromARGB(210, 75, 201, 207)
-                        // Color.fromARGB(200, 184, 30, 160),
-                        // Color.fromARGB(200, 60, 17, 109),
+                  gradient: LinearGradient(
+                  colors: <Color>[
+                    Color.fromARGB(210, 75, 226, 201),
+                    Color.fromARGB(210, 10, 215, 219)
                       ],
-                      stops: [0,0.8],
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter
-                      )
+                    stops: [0.1,0.9],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter
+                  )
                   ),
                 ),
                 Container(
                   child: Row(
                     children: <Widget>[
-                      // Padding(padding: EdgeInsets.only(top: MediaQuery.of(context).size.height/32),),
                       Container(
                         height: MediaQuery.of(context).size.height/3.3,
                         width: MediaQuery.of(context).size.width/12,
@@ -288,13 +354,12 @@ String readTimestamp(int timestamp) {
                           mainAxisAlignment: MainAxisAlignment.start,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
-                            Padding(padding: EdgeInsets.only(top: MediaQuery.of(context).size.height/32),),
-                            Row(
+                          Padding(padding: EdgeInsets.only(top: MediaQuery.of(context).size.height/32),),
+                          Row(
                           children: <Widget>[
                               Text("Weather Forecast",
                               style: TextStyle(fontSize: 26,fontWeight: FontWeight.bold,),                        
-                              ),
-                              
+                              ),  
                           ],
                         ),
                          Row(
@@ -302,13 +367,11 @@ String readTimestamp(int timestamp) {
                               Text("Forecast from $day1 $date1 $month1 to $day5 $date5 $month5",
                               style: TextStyle(fontSize: 13),                        
                               ),
-                          
                           ],
                         ),
                         Padding(padding: EdgeInsets.only(top: MediaQuery.of(context).size.height/27),),
                          Row(
-                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                           
+                           mainAxisAlignment: MainAxisAlignment.spaceBetween,                           
                              children: <Widget>[
                                Container(
                                    height: MediaQuery.of(context).size.height/6,
@@ -322,7 +385,7 @@ String readTimestamp(int timestamp) {
                                        ),
                                       Row(
                                         children: <Widget>[
-                                          Icon(Icons.wb_sunny,size: 28,)
+                                          Icon(geticon("$day1_icon"),size: 28,)
                                         ],
                                       ),
                                       Row(
@@ -346,7 +409,7 @@ String readTimestamp(int timestamp) {
                                      ),
                                     Row(
                                       children: <Widget>[
-                                        Icon(Icons.wb_sunny,size: 28,)
+                                        Icon(geticon("$day2_icon"),size: 28,)
                                       ],
                                     ),
                                     Row(
@@ -370,7 +433,7 @@ String readTimestamp(int timestamp) {
                                      ),
                                     Row(
                                       children: <Widget>[
-                                        Icon(Icons.wb_sunny,size: 28,)
+                                         Icon(geticon("$day3_icon"),size: 28,)
                                       ],
                                     ),
                                     Row(
@@ -394,7 +457,7 @@ String readTimestamp(int timestamp) {
                                      ),
                                     Row(
                                       children: <Widget>[
-                                        Icon(Icons.wb_sunny,size: 28,)
+                                         Icon(geticon("$day4_icon"),size: 28,)
                                       ],
                                     ),
                                     Row(
@@ -418,7 +481,7 @@ String readTimestamp(int timestamp) {
                                      ),
                                     Row(
                                       children: <Widget>[
-                                        Icon(Icons.wb_sunny,size: 28,)
+                                         Icon(geticon("$day5_icon"),size: 28,)
                                       ],
                                     ),
                                     Row(
@@ -455,9 +518,32 @@ String readTimestamp(int timestamp) {
 
                  ),
               )),
-              Padding(padding: EdgeInsets.only(left: MediaQuery.of(context).size.width/22),),
-              IconButton(icon: Icon(Icons.location_on,color: Colors.white,size: 18,), onPressed: () {},),
-              IconButton(icon: Icon(Icons.replay,color: Colors.white,size: 18,), onPressed: () {},)
+              Padding(padding: EdgeInsets.only(left: MediaQuery.of(context).size.width/32),),
+              InkWell(
+               onTap:()=>{Navigator.of(context).push(MaterialPageRoute<Null>(builder:(BuildContext context){return AqiSearch(long,lat,location);}))},
+                splashColor: Colors.blue,
+                child: Text("AIR\nQUALITY",
+                textAlign: TextAlign.center,
+                style:TextStyle(
+                  color: Colors.white,
+                  fontSize: 10
+                  )
+                ),
+              ),
+              IconButton(icon: Icon(Icons.location_on,color: Colors.white,size: 18,),
+               onPressed: () {
+                 getlocation();
+                 setState(() {                   
+                 });
+               },),
+              IconButton(icon: Icon(MdiIcons.replay,color: Colors.white,size: 18,), 
+              onPressed: () {
+                fetchData();
+                fetchForecastData();
+                setState(() {
+                  
+                });
+              },)
             ],
           ),
           
@@ -525,7 +611,17 @@ String readTimestamp(int timestamp) {
                                 color: Colors.white
                               )
                               ,),
-                              Icon(MdiIcons.cloud,color:Colors.blueAccent,size: 60,)
+                              Container(
+                                height:  MediaQuery.of(context).size.height/12,
+                                width: MediaQuery.of(context).size.height/12,
+                                decoration: BoxDecoration(
+                                  image: DecorationImage(
+                                    fit: BoxFit.fill,
+                                    image: NetworkImage("http://openweathermap.org/img/wn/$img_name@2x.png"),
+                                  )
+                                ),
+                              )
+                             // IconButton(iconSize: 69,icon: Image.network("http://openweathermap.org/img/wn/$img_name@2x.png"), onPressed: () {},)
                            ],
                            ),
                            Padding(padding: EdgeInsets.only(top: MediaQuery.of(context).size.height/40),),
@@ -542,7 +638,7 @@ String readTimestamp(int timestamp) {
                            Row(
                              mainAxisAlignment: MainAxisAlignment.center,
                              children: <Widget>[
-                               Expanded(child: Text("Today in the City $location is $type with Temperature max "+dailymax_temp[0] +"°C and temperature min $temp_min°C",
+                               Expanded(child: Text("Today in the City $location is $type with Temperature max "+curmax.toString() +"°C and temperature min "+curmin.toString() +"°C",
                                style: TextStyle(
                                  color: Colors.white,
                                  fontSize: 13,

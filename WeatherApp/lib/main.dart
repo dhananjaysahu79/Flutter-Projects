@@ -21,71 +21,71 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class ProgPage extends StatefulWidget {
-  ProgPage({Key key}) : super(key: key);
+// class ProgPage extends StatefulWidget {
+//   ProgPage({Key key}) : super(key: key);
 
-  _ProgPageState createState() => _ProgPageState();
-}
+//   _ProgPageState createState() => _ProgPageState();
+// }
 
-class _ProgPageState extends State<ProgPage> {
-  int number;
-  @override
-  void initState() { 
-    super.initState();
-    timer();
-  }
-   timer() async {
+// class _ProgPageState extends State<ProgPage> {
+//   int number;
+//   @override
+//   void initState() { 
+//     super.initState();
+//     timer();
+//   }
+//    timer() async {
     
-    for(int i=1;i<=100;i++){
-      await Future.delayed(const Duration(milliseconds: 500),(){
-       setState(() {
-        bloc1.counter();
-        bloc2.counter();
-       });
-      });
-    }
-  }
+//     for(int i=1;i<=100;i++){
+//       await Future.delayed(const Duration(milliseconds: 500),(){
+//        setState(() {
+//         bloc1.counter();
+//         bloc2.counter();
+//        });
+//       });
+//     }
+//   }
 
 
 
 
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-     body: Stack(
-       children: <Widget>[
-         Center(
-         child: ProgressBar(number),
-        ),
-        StreamBuilder<Object>(
-          stream: bloc1.number1,
-          builder: (context, snapshot) {
-            number=snapshot.data;
-            return Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Text("Processing",style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    Text("$number"+"%",style: TextStyle(fontSize: 25),),
-                  ],
-                )
-              ],
-            );
-          }
-        )
-       ],
-     )
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//      body: Stack(
+//        children: <Widget>[
+//          Center(
+//          child: ProgressBar(number),
+//         ),
+//         StreamBuilder<Object>(
+//           stream: bloc1.number1,
+//           builder: (context, snapshot) {
+//             number=snapshot.data;
+//             return Column(
+//               mainAxisAlignment: MainAxisAlignment.center,
+//               children: <Widget>[
+//                 Row(
+//                   mainAxisAlignment: MainAxisAlignment.center,
+//                   children: <Widget>[
+//                     Text("Processing",style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
+//                   ],
+//                 ),
+//                 Row(
+//                   mainAxisAlignment: MainAxisAlignment.center,
+//                   children: <Widget>[
+//                     Text("$number"+"%",style: TextStyle(fontSize: 25),),
+//                   ],
+//                 )
+//               ],
+//             );
+//           }
+//         )
+//        ],
+//      )
+//     );
+//   }
+// }
 
 
 
