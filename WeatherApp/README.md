@@ -1,6 +1,11 @@
-# progressbar
+# AQweather
 
-A new Flutter project.
+A Weather ForeCast Application.
+Shows Current Weather
+Shows Five Days Forecast
+Shows sunrise,sunset,humidity etc
+Shows Air Quality Index
+Shows Levels of Different Pollutant parameters
 
 ## Getting Started
 

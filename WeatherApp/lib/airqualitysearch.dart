@@ -108,14 +108,14 @@ class _AqiSearchState extends State<AqiSearch> {
             children: <Widget>[
                Padding(padding: EdgeInsets.only(top: MediaQuery.of(context).size.height/35)),
                
-               //Text("$longitude , $latitude ,$co",style: TextStyle(color: Colors.white,fontSize: 34),),             
+                            
               Container (
                 height: MediaQuery.of(context).size.height/3,
                 width: MediaQuery.of(context).size.width,
                 child: Stack(         
                   alignment: Alignment.center,        
                   children: <Widget>[
-                   // calprogressBar(),
+                
                     ProgressBar((aqi/5).round()),
                     Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -134,12 +134,7 @@ class _AqiSearchState extends State<AqiSearch> {
                     height: 40,
                     width:340,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.only(
-                        topRight: Radius.circular(5),
-                        topLeft: Radius.circular(5),
-                        bottomLeft: Radius.circular(5),
-                        bottomRight: Radius.circular(5)
-                        ),
+                      borderRadius: BorderRadius.all(Radius.circular(5)) ,
                       gradient: LinearGradient(
                            stops: [0.0,0.9],
                          colors: [Color.fromARGB(210, 19, 206, 206),Color.fromARGB(210, 76, 240, 207),]
